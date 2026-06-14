@@ -52,10 +52,4 @@ public class SaldoInsuficienteException extends AppException
 throw new SaldoInsuficienteException(disponible, requerido);
 ```
 
-Arquitectura
-    AppException: clase base abstracta con código, categoría y mensaje.
-    ErrorCategory: interfaz para categorizar errores. Las estándar están en StandardErrorCategories.
-    ErrorResponse: POJO con code, message, timestamp y details.
-    ErrorHandler: traduce cualquier Throwable a ErrorResponse.
-
 LICENCIA MIT [Roony11-1]
