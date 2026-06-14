@@ -14,3 +14,48 @@ Proporciona una jerarquía de excepciones de negocio (`AppException`) y un forma
     <artifactId>roony-error-core</artifactId>
     <version>1.0.0</version>
 </dependency>
+```
+
+## Uso básico
+```java
+throw new NotFoundException("Usuario", 123L);
+throw new AlreadyExistsException("Email ya registrado");
+throw new InvalidInputException("El campo 'nombre' es obligatorio");
+```
+
+## Convertir cualquier excepción en un ErrorResponse
+```java
+try 
+{
+    // lógica de negocio
+} 
+catch (Exception e) 
+{
+    // Ya hace logging
+    ErrorResponse error = ErrorHandler.toErrorResponse(e);
+}
+```
+
+## Crear tu propia excepción de dominio
+```java
+public class SaldoInsuficienteException extends AppException 
+{
+    public SaldoInsuficienteException(BigDecimal disponible, BigDecimal requerido) 
+    {
+        super("PAGO-001", "Saldo insuficiente", StandardErrorCategories.INVALID_INPUT, "Saldo " + disponible + " < " + requerido);
+    }
+}
+```
+
+## Luego la lanzas como cualquier otra:
+```java
+throw new SaldoInsuficienteException(disponible, requerido);
+```
+
+Arquitectura
+    AppException: clase base abstracta con código, categoría y mensaje.
+    ErrorCategory: interfaz para categorizar errores. Las estándar están en StandardErrorCategories.
+    ErrorResponse: POJO con code, message, timestamp y details.
+    ErrorHandler: traduce cualquier Throwable a ErrorResponse.
+
+LICENCIA MIT [Roony11-1]
