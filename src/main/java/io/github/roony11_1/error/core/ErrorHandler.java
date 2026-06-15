@@ -1,9 +1,9 @@
-package io.github.roony.error.core;
+package io.github.roony11_1.error.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.roony.error.core.exceptions.AppException;
+import io.github.roony11_1.error.core.exceptions.AppException;
 
 import java.util.List;
 

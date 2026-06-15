@@ -1,6 +1,6 @@
-package io.github.roony.error.core.exceptions;
+package io.github.roony11_1.error.core.exceptions;
 
-import io.github.roony.error.core.ErrorCategory;
+import io.github.roony11_1.error.core.ErrorCategory;
 
 public abstract class AppException extends RuntimeException 
 {

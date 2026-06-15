@@ -1,6 +1,6 @@
-package io.github.roony.error.core.exceptions;
+package io.github.roony11_1.error.core.exceptions;
 
-import io.github.roony.error.core.StandardErrorCategories;
+import io.github.roony11_1.error.core.StandardErrorCategories;
 
 public class InternalErrorException extends AppException 
 {
