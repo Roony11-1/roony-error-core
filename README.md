@@ -38,6 +38,7 @@ O, si usas el BOM del ecosistema:
         <!-- sin versión: la hereda del BOM -->
     </dependency>
 </dependencies>
+```
 
 ## Uso básico
 ```java
