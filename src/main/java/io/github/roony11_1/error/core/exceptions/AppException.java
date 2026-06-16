@@ -24,6 +24,22 @@ public abstract class AppException extends RuntimeException
         this.category = category;
     }
 
+    protected AppException(String code, String defaultMessage, ErrorCategory category, Throwable cause) 
+    {
+        super(defaultMessage, cause);
+        this.code = code;
+        this.defaultMessage = defaultMessage;
+        this.category = category;
+    }
+
+    protected AppException(String code, String defaultMessage, ErrorCategory category, String customMessage, Throwable cause) 
+    {
+        super(customMessage, cause);
+        this.code = code;
+        this.defaultMessage = defaultMessage;
+        this.category = category;
+    }
+
     public String getCode() { return code; }
     public String getDefaultMessage() { return defaultMessage; }
     public ErrorCategory getCategory() { return category; }
