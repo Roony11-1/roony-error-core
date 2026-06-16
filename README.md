@@ -12,9 +12,32 @@ Proporciona una jerarquía de excepciones de negocio (`AppException`) y un forma
 <dependency>
     <groupId>io.github.roony</groupId>
     <artifactId>roony-error-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
+
+O, si usas el BOM del ecosistema:
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.github.roony11-1</groupId>
+            <artifactId>roony-bom</artifactId>
+            <version>1.0.0</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <dependency>
+        <groupId>io.github.roony11-1</groupId>
+        <artifactId>roony-error-core</artifactId>
+        <!-- sin versión: la hereda del BOM -->
+    </dependency>
+</dependencies>
 
 ## Uso básico
 ```java
