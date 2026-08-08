@@ -31,13 +31,17 @@ class ErrorHandlerTest
     }
 
     private static final String PROFILE_KEY = "app.profile";
+    private static final String SPRING_PROFILE_KEY = "spring.profiles.active";
     private String originalProfile;
+    private String originalSpringProfile;
 
     @BeforeEach
     void setUp() 
     {
         originalProfile = System.getProperty(PROFILE_KEY);
+        originalSpringProfile = System.getProperty(SPRING_PROFILE_KEY);
         System.clearProperty(PROFILE_KEY);
+        System.clearProperty(SPRING_PROFILE_KEY);
     }
 
     @AfterEach
@@ -50,6 +54,14 @@ class ErrorHandlerTest
         else 
         {
             System.clearProperty(PROFILE_KEY);
+        }
+        if (originalSpringProfile != null) 
+        {
+            System.setProperty(SPRING_PROFILE_KEY, originalSpringProfile);
+        } 
+        else 
+        {
+            System.clearProperty(SPRING_PROFILE_KEY);
         }
     }
 
@@ -124,6 +136,54 @@ class ErrorHandlerTest
     void toErrorResponse_withNull_shouldNotThrowException() 
     {
         assertDoesNotThrow(() -> ErrorHandler.toErrorResponse(null));
+    }
+
+    @Test
+    void toErrorResponse_withNestedAppExceptionAsCauseShouldRespectDominio() 
+    {
+        AppException internal = new TestAppException(
+            "TEST-005", "Falló", StandardErrorCategories.NOT_FOUND, "No encontrado"
+        );
+        RuntimeException infra = new IllegalStateException("capa infraestructura", internal);
+
+        ErrorResponse response = ErrorHandler.toErrorResponse(infra);
+
+        assertEquals("TEST-005", response.getCode());
+        assertEquals("No encontrado", response.getMessage());
+    }
+
+    @Test
+    void toErrorResponse_withAppExceptionInDeepCauseChain() 
+    {
+        AppException domain = new TestAppException(
+            "TEST-006", "Dominio", StandardErrorCategories.INVALID_INPUT, "Valor inválido"
+        );
+        Throwable deep = new RuntimeException("nivel1", new IllegalArgumentException("nivel2", domain));
+
+        ErrorResponse response = ErrorHandler.toErrorResponse(deep);
+
+        assertEquals("TEST-006", response.getCode());
+        assertEquals("Valor inválido", response.getMessage());
+    }
+
+    @Test
+    void isDevelopment_trueWhenSpringProfilesActiveSystemProperty() 
+    {
+        System.setProperty("spring.profiles.active", "dev");
+        RuntimeException ex = new RuntimeException("prueba");
+
+        ErrorResponse response = ErrorHandler.toErrorResponse(ex);
+
+        assertFalse(response.getDetails().isEmpty());
+    }
+
+    @Test
+    void isDevelopment_falseInDefaultProfile() 
+    {
+        ErrorResponse response = ErrorHandler.toErrorResponse(new RuntimeException("prueba"));
+
+        assertEquals("ERR-0005", response.getCode());
+        assertTrue(response.getDetails().isEmpty());
     }
 
     @Test

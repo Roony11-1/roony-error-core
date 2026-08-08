@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import io.github.roony11_1.error.core.exceptions.AppException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class ErrorHandler 
@@ -15,7 +16,13 @@ public final class ErrorHandler
 
     public static ErrorResponse toErrorResponse(Throwable throwable) 
     {
-        if (throwable instanceof AppException appEx) 
+        if (throwable == null) 
+        {
+            return buildFromUnexpected(null);
+        }
+
+        AppException appEx = findAppException(throwable);
+        if (appEx != null) 
         {
             return buildFromAppException(appEx);
         } 
@@ -25,11 +32,31 @@ public final class ErrorHandler
         }
     }
 
+    /**
+     * Recorre la cadena de causas buscando una AppException envuelta
+     * en excepciones de infraestructura (ej. DataIntegrityException con causa de dominio).
+     */
+    private static AppException findAppException(Throwable throwable) 
+    {
+        Throwable current = throwable;
+        List<Throwable> seen = new ArrayList<>();
+        while (current != null && !seen.contains(current)) 
+        {
+            if (current instanceof AppException appEx) 
+            {
+                return appEx;
+            }
+            seen.add(current);
+            current = current.getCause();
+        }
+        return null;
+    }
+
     private static ErrorResponse buildFromAppException(AppException ex) 
     {
         ErrorResponse response = new ErrorResponse(ex.getCode(), ex.getDisplayMessage());
         enrichWithDevelopmentDetails(response, ex);
-        log.warn("AppException: {} - {}", ex.getCode(), ex.getDisplayMessage(), ex);
+        log.warn("AppException: {} - {}", ex.getCode(), ex.getDisplayMessage());
         return response;
     }
 
@@ -48,13 +75,27 @@ public final class ErrorHandler
     {
         if (isDevelopment()) 
         {
-            response.setDetails(List.of(ex.toString()));
+            response.setDetails(List.of(String.valueOf(ex)));
         }
     }
 
     private static boolean isDevelopment() 
     {
-        String profile = System.getProperty("app.profile", "prod");
-        return "dev".equalsIgnoreCase(profile);
+        String profile = resolveProfile();
+        return profile != null && profile.toLowerCase().contains("dev");
+    }
+
+    private static String resolveProfile() 
+    {
+        for (String property : new String[] {"app.profile", "spring.profiles.active"}) 
+        {
+            String value = System.getProperty(property);
+            if (value != null && !value.isEmpty()) 
+            {
+                return value;
+            }
+        }
+        String env = System.getenv("SPRING_PROFILES_ACTIVE");
+        return (env == null || env.isEmpty()) ? System.getenv("APP_PROFILE") : env;
     }
 }
