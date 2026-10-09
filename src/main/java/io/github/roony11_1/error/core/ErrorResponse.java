@@ -4,6 +4,15 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the standardized structure of an application error response.
+ *
+ * <p>Contains an error code, a human-readable message, a timestamp, optional
+ * details, the request path, and a trace identifier.</p>
+ *
+ * <p>The path and trace identifier can be populated by the integration
+ * layer that handles the exception.</p>
+ */
 public class ErrorResponse 
 {
     private String code;
@@ -13,7 +22,16 @@ public class ErrorResponse
     private String path;
     private String traceId;
 
-    public ErrorResponse(String code, String message) 
+    /**
+     * Creates an error response with the specified code and message.
+     *
+     * <p>The timestamp is initialized to the current instant, and the
+     * details collection is initialized as an empty list.</p>
+     *
+     * @param code the application error code
+     * @param message the human-readable error message
+     */
+    public ErrorResponse(String code, String message)
     {
         this.code = code;
         this.message = message;
