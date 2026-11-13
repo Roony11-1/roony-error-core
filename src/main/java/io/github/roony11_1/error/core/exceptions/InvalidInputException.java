@@ -1,28 +1,21 @@
-
 package io.github.roony11_1.error.core.exceptions;
 
 import io.github.roony11_1.error.core.StandardErrorCategories;
 
-/**
- * Exception thrown when the supplied input is invalid.
- *
- * <p>Uses error code {@code ERR-0002} and the
- * {@link StandardErrorCategories#INVALID_INPUT} category.</p>
- */
 public class InvalidInputException extends AppException
 {
-    /**
-     * Creates an exception describing the invalid input.
-     *
-     * @param details a description of the validation or input error
-     */
+    private static final String CODE = "INVALID_INPUT";
+    private static final String DEFAULT_MESSAGE = "Entrada inválida";
+
     public InvalidInputException(String details)
     {
-        super(
-            "ERR-0002",
-            "Entrada inválida: " + details,
-            StandardErrorCategories.INVALID_INPUT,
-            "Entrada inválida: " + details
-        );
+        super(CODE, DEFAULT_MESSAGE, StandardErrorCategories.INVALID_INPUT,
+              DEFAULT_MESSAGE + ": " + details);
+    }
+
+    public InvalidInputException(String details, Throwable cause)
+    {
+        super(CODE, DEFAULT_MESSAGE, StandardErrorCategories.INVALID_INPUT,
+              DEFAULT_MESSAGE + ": " + details, cause);
     }
 }
