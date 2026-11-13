@@ -1,4 +1,4 @@
-package io.github.roony11_1.error.core;
+package io.github.roony11_1.error.core.dto;
 
 import java.time.Instant;
 import java.util.ArrayList;
