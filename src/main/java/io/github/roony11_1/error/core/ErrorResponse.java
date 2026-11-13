@@ -3,57 +3,49 @@ package io.github.roony11_1.error.core;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-/**
- * Represents the standardized structure of an application error response.
- *
- * <p>Contains an error code, a human-readable message, a timestamp, optional
- * details, the request path, and a trace identifier.</p>
- *
- * <p>The path and trace identifier can be populated by the integration
- * layer that handles the exception.</p>
- */
-public class ErrorResponse 
+public record ErrorResponse(
+    String code,
+    String message,
+    Instant timestamp,
+    List<String> details,
+    String path,
+    String traceId)
 {
-    private String code;
-    private String message;
-    private Instant timestamp;
-    private List<String> details;
-    private String path;
-    private String traceId;
-
-    /**
-     * Creates an error response with the specified code and message.
-     *
-     * <p>The timestamp is initialized to the current instant, and the
-     * details collection is initialized as an empty list.</p>
-     *
-     * @param code the application error code
-     * @param message the human-readable error message
-     */
-    public ErrorResponse(String code, String message)
+    public ErrorResponse
     {
-        this.code = code;
-        this.message = message;
-        this.timestamp = Instant.now();
-        this.details = new ArrayList<>();
+        Objects.requireNonNull(code, "code");
+        Objects.requireNonNull(message, "message");
+
+        if (timestamp == null)
+            timestamp = Instant.now();
+
+        if (details == null)
+            details = List.of();
+        else
+            details = List.copyOf(details);
     }
 
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
+    public ErrorResponse(String code, String message)
+    {
+        this(code, message, Instant.now(), List.of(), null, null);
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public ErrorResponse withDetail(String detail)
+    {
+        var copy = new ArrayList<>(this.details);
+        copy.add(detail);
+        return new ErrorResponse(code, message, timestamp, copy, path, traceId);
+    }
 
-    public Instant getTimestamp() { return timestamp; }
-    public void setTimestamp(Instant timestamp) { this.timestamp = timestamp; }
+    public ErrorResponse withPath(String path)
+    {
+        return new ErrorResponse(code, message, timestamp, details, path, traceId);
+    }
 
-    public List<String> getDetails() { return details; }
-    public void setDetails(List<String> details) { this.details = details; }
-
-    public String getPath() { return this.path; }
-    public void setPath(String path) { this.path = path; }
-
-    public void setTraceId(String traceId) { this.traceId = traceId; }
-    public String getTraceId() { return this.traceId; }
+    public ErrorResponse withTraceId(String traceId)
+    {
+        return new ErrorResponse(code, message, timestamp, details, path, traceId);
+    }
 }
