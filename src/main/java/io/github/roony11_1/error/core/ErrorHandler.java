@@ -113,7 +113,7 @@ public final class ErrorHandler
             ex.getDisplayMessage()
         );
 
-        enrichWithDevelopmentDetails(response, ex);
+        response = enrichWithDevelopmentDetails(response, ex);
 
         log.warn("AppException: {} - {}", ex.getCode(), ex.getDisplayMessage());
 
@@ -139,31 +139,19 @@ public final class ErrorHandler
             "Error interno inesperado"
         );
 
-        enrichWithDevelopmentDetails(response, ex);
+        response = enrichWithDevelopmentDetails(response, ex);
 
         log.error("Error inesperado", ex);
 
         return response;
     }
 
-    /**
-     * Adds exception details to the response when a development profile
-     * is active.
-     *
-     * <p>In other environments, the response details remain unchanged.</p>
-     *
-     * @param response the response to enrich
-     * @param ex the exception whose details may be included
-     */
-    private static void enrichWithDevelopmentDetails(
-        ErrorResponse response,
-        Throwable ex
-    )
+    private static ErrorResponse enrichWithDevelopmentDetails(ErrorResponse response, Throwable ex)
     {
         if (isDevelopment())
-        {
-            response.setDetails(List.of(String.valueOf(ex)));
-        }
+            response.withDetail(String.valueOf(ex));
+
+        return response;
     }
 
     /**
