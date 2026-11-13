@@ -6,26 +6,23 @@ import org.slf4j.LoggerFactory;
 import io.github.roony11_1.error.core.dto.ErrorResponse;
 import io.github.roony11_1.error.core.exceptions.AppException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public final class ErrorHandler
 {
     private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 
-    private final IProfileResolver profileResolver;
+    private final IErrorEnricher enricher;
     private final ErrorResponseMapper mapper;
 
-    public ErrorHandler(IProfileResolver profileResolver, ErrorResponseMapper mapper)
+    public ErrorHandler(IErrorEnricher enricher, ErrorResponseMapper mapper)
     {
-        this.profileResolver = profileResolver;
+        this.enricher = enricher;
         this.mapper = mapper;
     }
 
     public ErrorResponse toErrorResponse(Throwable throwable)
     {
         if (throwable == null)
-            return enrichWithDevelopmentDetails(mapper.toResponse((Throwable) null), null);
+            return enricher.enrich(mapper.toResponse((Throwable) null), null);
 
         AppException appEx = ExceptionInspector.find(throwable);
 
@@ -38,7 +35,7 @@ public final class ErrorHandler
     private ErrorResponse buildFromAppException(AppException ex)
     {
         ErrorResponse response = mapper.toResponse(ex);
-        response = enrichWithDevelopmentDetails(response, ex);
+        response = enricher.enrich(response, ex);
         log.warn("AppException: {} - {}", ex.getCode(), ex.getDisplayMessage());
         return response;
     }
@@ -46,21 +43,8 @@ public final class ErrorHandler
     private ErrorResponse buildFromUnexpected(Throwable ex)
     {
         ErrorResponse response = mapper.toResponse(ex);
-        response = enrichWithDevelopmentDetails(response, ex);
+        response = enricher.enrich(response, ex);
         log.error("Error inesperado", ex);
         return response;
-    }
-
-    private ErrorResponse enrichWithDevelopmentDetails(ErrorResponse response, Throwable ex)
-    {
-        if (isDevelopment() && ex != null)
-            return response.withError(String.valueOf(ex));
-        return response;
-    }
-
-    private boolean isDevelopment()
-    {
-        String profile = profileResolver.resolve();
-        return profile != null && profile.toLowerCase().contains("dev");
     }
 }
