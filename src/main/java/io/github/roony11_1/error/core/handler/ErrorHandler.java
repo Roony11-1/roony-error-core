@@ -1,4 +1,3 @@
-
 package io.github.roony11_1.error.core.handler;
 
 import org.slf4j.Logger;
@@ -14,7 +13,10 @@ public final class ErrorHandler
 {
     private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 
-    public final IProfileResolver profileResolver;
+    private static final String UNEXPECTED_CODE = "ERR-0005";
+    private static final String UNEXPECTED_TITLE = "Error interno inesperado";
+
+    private final IProfileResolver profileResolver;
 
     public ErrorHandler(IProfileResolver profileResolver)
     {
@@ -42,9 +44,7 @@ public final class ErrorHandler
         while (current != null && !seen.contains(current))
         {
             if (current instanceof AppException appEx)
-            {
                 return appEx;
-            }
 
             seen.add(current);
             current = current.getCause();
@@ -57,6 +57,7 @@ public final class ErrorHandler
     {
         ErrorResponse response = new ErrorResponse(
             ex.getCode(),
+            ex.getCategory().description(),
             ex.getDisplayMessage()
         );
 
@@ -70,8 +71,9 @@ public final class ErrorHandler
     private ErrorResponse buildFromUnexpected(Throwable ex)
     {
         ErrorResponse response = new ErrorResponse(
-            "ERR-0005",
-            "Error interno inesperado"
+            UNEXPECTED_CODE,
+            UNEXPECTED_TITLE,
+            null
         );
 
         response = enrichWithDevelopmentDetails(response, ex);
@@ -84,7 +86,7 @@ public final class ErrorHandler
     private ErrorResponse enrichWithDevelopmentDetails(ErrorResponse response, Throwable ex)
     {
         if (isDevelopment())
-            response.withDetail(String.valueOf(ex));
+            return response.withError(String.valueOf(ex));
 
         return response;
     }

@@ -1,51 +1,74 @@
 package io.github.roony11_1.error.core.dto;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public record ErrorResponse(
+    URI type,
+    String title,
+    String detail,
+    URI instance,
     String code,
-    String message,
     Instant timestamp,
-    List<String> details,
-    String path,
+    List<String> errors,
     String traceId)
 {
+    public static final URI BLANK_TYPE = URI.create("about:blank");
+
     public ErrorResponse
     {
+        if (type == null)
+            type = BLANK_TYPE;
+
+        Objects.requireNonNull(title, "title");
+
         Objects.requireNonNull(code, "code");
-        Objects.requireNonNull(message, "message");
 
         if (timestamp == null)
             timestamp = Instant.now();
 
-        if (details == null)
-            details = List.of();
+        if (errors == null)
+            errors = List.of();
         else
-            details = List.copyOf(details);
+            errors = List.copyOf(errors);
     }
 
-    public ErrorResponse(String code, String message)
+    /**
+     * Constructor de conveniencia con lo mínimo del estándar.
+     * detail e instance pueden ser null (son opcionales en el RFC).
+     */
+    public ErrorResponse(String code, String title, String detail)
     {
-        this(code, message, Instant.now(), List.of(), null, null);
+        this(BLANK_TYPE, title, detail, null, code,
+             Instant.now(), List.of(), null);
     }
 
-    public ErrorResponse withDetail(String detail)
+    public ErrorResponse withType(URI type)
     {
-        var copy = new ArrayList<>(this.details);
-        copy.add(detail);
-        return new ErrorResponse(code, message, timestamp, copy, path, traceId);
+        return new ErrorResponse(type, title, detail, instance,
+            code, timestamp, errors, traceId);
     }
 
-    public ErrorResponse withPath(String path)
+    public ErrorResponse withError(String error)
     {
-        return new ErrorResponse(code, message, timestamp, details, path, traceId);
+        var copy = new ArrayList<>(this.errors);
+        copy.add(error);
+        return new ErrorResponse(type, title, detail, instance,
+            code, timestamp, copy, traceId);
+    }
+
+    public ErrorResponse withInstance(URI instance)
+    {
+        return new ErrorResponse(type, title, detail, instance,
+            code, timestamp, errors, traceId);
     }
 
     public ErrorResponse withTraceId(String traceId)
     {
-        return new ErrorResponse(code, message, timestamp, details, path, traceId);
+        return new ErrorResponse(type, title, detail, instance,
+            code, timestamp, errors, traceId);
     }
 }
