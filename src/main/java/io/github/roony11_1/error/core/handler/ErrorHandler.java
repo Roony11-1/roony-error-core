@@ -13,22 +13,21 @@ public final class ErrorHandler
 {
     private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 
-    private static final String UNEXPECTED_CODE = "ERR-0005";
-    private static final String UNEXPECTED_TITLE = "Error interno inesperado";
-
     private final IProfileResolver profileResolver;
+    private final ErrorResponseMapper mapper;
 
-    public ErrorHandler(IProfileResolver profileResolver)
+    public ErrorHandler(IProfileResolver profileResolver, ErrorResponseMapper mapper)
     {
         this.profileResolver = profileResolver;
+        this.mapper = mapper;
     }
 
     public ErrorResponse toErrorResponse(Throwable throwable)
     {
         if (throwable == null)
-            return buildFromUnexpected(null);
+            return enrichWithDevelopmentDetails(mapper.toResponse((Throwable) null), null);
 
-        AppException appEx = findAppException(throwable);
+        AppException appEx = ExceptionInspector.find(throwable);
 
         if (appEx != null)
             return buildFromAppException(appEx);
@@ -36,65 +35,32 @@ public final class ErrorHandler
             return buildFromUnexpected(throwable);
     }
 
-    private AppException findAppException(Throwable throwable)
-    {
-        Throwable current = throwable;
-        List<Throwable> seen = new ArrayList<>();
-
-        while (current != null && !seen.contains(current))
-        {
-            if (current instanceof AppException appEx)
-                return appEx;
-
-            seen.add(current);
-            current = current.getCause();
-        }
-
-        return null;
-    }
-
     private ErrorResponse buildFromAppException(AppException ex)
     {
-        ErrorResponse response = new ErrorResponse(
-            ex.getCode(),
-            ex.getCategory().description(),
-            ex.getDisplayMessage()
-        );
-
+        ErrorResponse response = mapper.toResponse(ex);
         response = enrichWithDevelopmentDetails(response, ex);
-
         log.warn("AppException: {} - {}", ex.getCode(), ex.getDisplayMessage());
-
         return response;
     }
 
     private ErrorResponse buildFromUnexpected(Throwable ex)
     {
-        ErrorResponse response = new ErrorResponse(
-            UNEXPECTED_CODE,
-            UNEXPECTED_TITLE,
-            null
-        );
-
+        ErrorResponse response = mapper.toResponse(ex);
         response = enrichWithDevelopmentDetails(response, ex);
-
         log.error("Error inesperado", ex);
-
         return response;
     }
 
     private ErrorResponse enrichWithDevelopmentDetails(ErrorResponse response, Throwable ex)
     {
-        if (isDevelopment())
+        if (isDevelopment() && ex != null)
             return response.withError(String.valueOf(ex));
-
         return response;
     }
 
     private boolean isDevelopment()
     {
         String profile = profileResolver.resolve();
-
         return profile != null && profile.toLowerCase().contains("dev");
     }
 }
