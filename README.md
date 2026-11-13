@@ -80,7 +80,7 @@ throw new InternalErrorException("calcular total");
 throw new ServiceUnavailableException("Pasarela de pagos no disponible");
 ```
 
-La categoría `CONFLICT` existe para errores de conflicto que no encajen en `ALREADY_EXISTS`; podés usarla en una excepción propia.
+La categoría `CONFLICT` existe para errores de conflicto que no encajen en `ALREADY_EXISTS`; puedes usarla en una excepción propia.
 
 ## Categorías estándar
 
@@ -99,7 +99,7 @@ La categoría `CONFLICT` existe para errores de conflicto que no encajen en `ALR
 
 ### Extensión: `ErrorCategory`
 
-Podés crear tus propias categorías sin tocar el core:
+Puedes crear tus propias categorías sin tocar el core:
 
 ```java
 public enum PagoErrorCategory implements ErrorCategory {
@@ -221,7 +221,7 @@ Implementación por defecto: `DefaultProfileResolver`, que consulta en este orde
 
 Si ninguna está definida, no se considera un entorno de desarrollo.
 
-Podés reemplazarla por una implementación propia:
+Puedes reemplazarla por una implementación propia:
 
 ```java
 public final class ConfigProfileResolver implements IProfileResolver {
@@ -246,7 +246,7 @@ ErrorHandler handler = new ErrorHandler(
 );
 ```
 
-Al ser una interfaz funcional, también podés usar una lambda:
+Al ser una interfaz funcional, también puedes usar una lambda:
 
 ```java
 IProfileResolver profiles = () -> "dev";
@@ -281,7 +281,7 @@ public final class RequestMetadataEnricher implements IErrorEnricher {
 }
 ```
 
-También podés combinar varios enrichers con un composite:
+También puedes combinar varios enrichers con un composite:
 
 ```java
 public final class CompositeEnricher implements IErrorEnricher {
