@@ -24,7 +24,7 @@ class ErrorResponseMapperTest
         ErrorResponse r = mapper.toResponse(ex);
 
         assertEquals("TEST-001", r.code());
-        assertEquals("Resource not found", r.title());
+        assertEquals("Recurso no encontrado", r.title());
         assertEquals("No encontrado", r.detail());
         assertTrue(r.errors().isEmpty());
     }
