@@ -13,28 +13,27 @@ public final class ErrorHandler
 {
     private static final Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 
-    private ErrorHandler() {}
+    public final IProfileResolver profileResolver;
 
-    public static ErrorResponse toErrorResponse(Throwable throwable)
+    public ErrorHandler(IProfileResolver profileResolver)
+    {
+        this.profileResolver = profileResolver;
+    }
+
+    public ErrorResponse toErrorResponse(Throwable throwable)
     {
         if (throwable == null)
-        {
             return buildFromUnexpected(null);
-        }
 
         AppException appEx = findAppException(throwable);
 
         if (appEx != null)
-        {
             return buildFromAppException(appEx);
-        }
         else
-        {
             return buildFromUnexpected(throwable);
-        }
     }
 
-    private static AppException findAppException(Throwable throwable)
+    private AppException findAppException(Throwable throwable)
     {
         Throwable current = throwable;
         List<Throwable> seen = new ArrayList<>();
@@ -53,7 +52,7 @@ public final class ErrorHandler
         return null;
     }
 
-    private static ErrorResponse buildFromAppException(AppException ex)
+    private ErrorResponse buildFromAppException(AppException ex)
     {
         ErrorResponse response = new ErrorResponse(
             ex.getCode(),
@@ -67,7 +66,7 @@ public final class ErrorHandler
         return response;
     }
 
-    private static ErrorResponse buildFromUnexpected(Throwable ex)
+    private ErrorResponse buildFromUnexpected(Throwable ex)
     {
         ErrorResponse response = new ErrorResponse(
             "ERR-0005",
@@ -81,7 +80,7 @@ public final class ErrorHandler
         return response;
     }
 
-    private static ErrorResponse enrichWithDevelopmentDetails(ErrorResponse response, Throwable ex)
+    private ErrorResponse enrichWithDevelopmentDetails(ErrorResponse response, Throwable ex)
     {
         if (isDevelopment())
             response.withDetail(String.valueOf(ex));
@@ -89,32 +88,10 @@ public final class ErrorHandler
         return response;
     }
 
-    private static boolean isDevelopment()
+    private boolean isDevelopment()
     {
-        String profile = resolveProfile();
+        String profile = profileResolver.resolve();
 
         return profile != null && profile.toLowerCase().contains("dev");
-    }
-
-    private static String resolveProfile()
-    {
-        for (String property : new String[] {
-            "app.profile",
-            "spring.profiles.active"
-        })
-        {
-            String value = System.getProperty(property);
-
-            if (value != null && !value.isEmpty())
-            {
-                return value;
-            }
-        }
-
-        String env = System.getenv("SPRING_PROFILES_ACTIVE");
-
-        return (env == null || env.isEmpty())
-            ? System.getenv("APP_PROFILE")
-            : env;
     }
 }
