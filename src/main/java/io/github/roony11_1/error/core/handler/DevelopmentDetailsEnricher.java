@@ -1,6 +1,6 @@
 package io.github.roony11_1.error.core.handler;
 
-import io.github.roony11_1.error.core.dto.ErrorResponse;
+import io.github.roony11_1.error.core.dto.ErrorInfo;
 
 public final class DevelopmentDetailsEnricher implements IErrorEnricher
 {
@@ -12,7 +12,7 @@ public final class DevelopmentDetailsEnricher implements IErrorEnricher
     }
 
     @Override
-    public ErrorResponse enrich(ErrorResponse response, Throwable ex)
+    public ErrorInfo enrich(ErrorInfo response, Throwable ex)
     {
         if (ex != null && isDevelopment())
             return response.withError(String.valueOf(ex));

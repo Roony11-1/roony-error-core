@@ -1,8 +1,8 @@
 package io.github.roony11_1.error.core.handler;
 
-import io.github.roony11_1.error.core.dto.ErrorResponse;
+import io.github.roony11_1.error.core.dto.ErrorInfo;
 
 public interface IErrorEnricher 
 {
-    ErrorResponse enrich(ErrorResponse response, Throwable ex);
+    ErrorInfo enrich(ErrorInfo response, Throwable ex);
 }

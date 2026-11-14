@@ -1,6 +1,6 @@
 package io.github.roony11_1.error.core.handler;
 
-import io.github.roony11_1.error.core.dto.ErrorResponse;
+import io.github.roony11_1.error.core.dto.ErrorInfo;
 import io.github.roony11_1.error.core.exceptions.AppException;
 
 /**
@@ -13,13 +13,13 @@ public class ErrorResponseMapper
     private static final String UNEXPECTED_CODE = "UNK-001";
     private static final String UNEXPECTED_TITLE = "Error interno inesperado";
 
-    public ErrorResponse toResponse(AppException ex)
+    public ErrorInfo toResponse(AppException ex)
     {
-        return new ErrorResponse(ex.getCode(), ex.getCategory().description(), ex.getDisplayMessage());
+        return new ErrorInfo(ex.getCode(), ex.getCategory().description(), ex.getDisplayMessage());
     }
 
-    public ErrorResponse toResponse(Throwable ex)
+    public ErrorInfo toResponse(Throwable ex)
     {
-        return new ErrorResponse(UNEXPECTED_CODE, UNEXPECTED_TITLE, null);
+        return new ErrorInfo(UNEXPECTED_CODE, UNEXPECTED_TITLE, null);
     }
 }
