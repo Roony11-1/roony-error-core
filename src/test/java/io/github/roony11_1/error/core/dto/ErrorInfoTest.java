@@ -14,20 +14,32 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.roony11_1.error.core.ErrorCategory;
+import io.github.roony11_1.error.core.StandardErrorCategories;
+
 public class ErrorInfoTest
 {
+    private static final ErrorCategory CAT = StandardErrorCategories.INTERNAL_ERROR;
+
     @Test
     void constructor_rejectsNullCode()
     {
         assertThrows(NullPointerException.class,
-            () -> new ErrorInfo(null, "title válido", "detail"));
+            () -> new ErrorInfo(null, "title válido", "detail", CAT));
     }
 
     @Test
     void constructor_rejectsNullTitle()
     {
         assertThrows(NullPointerException.class,
-            () -> new ErrorInfo("C-001", null, "detail"));
+            () -> new ErrorInfo("C-001", null, "detail", CAT));
+    }
+
+    @Test
+    void constructor_rejectsNullCategory()
+    {
+        assertThrows(NullPointerException.class,
+            () -> new ErrorInfo("code", "title", "detail", null));
     }
 
     @Test
@@ -35,7 +47,8 @@ public class ErrorInfoTest
     {
         Instant before = Instant.now();
         ErrorInfo e = new ErrorInfo(
-            "code", "title", "detail", null, null, null, null);
+            "code", "title", "detail",
+            null, null, null, null, CAT);
         Instant after = Instant.now();
 
         assertNotNull(e.timestamp());
@@ -47,7 +60,8 @@ public class ErrorInfoTest
     void constructor_defaultsErrorsToEmptyWhenNull()
     {
         ErrorInfo e = new ErrorInfo(
-            "code", "title", "detail", Instant.now(), null, null, null);
+            "code", "title", "detail",
+            Instant.now(), null, null, null, CAT);
 
         assertEquals(List.of(), e.errors());
     }
@@ -59,7 +73,8 @@ public class ErrorInfoTest
         original.add("primero");
 
         ErrorInfo e = new ErrorInfo(
-            "code", "title", "detail", Instant.now(), original, null, null);
+            "code", "title", "detail",
+            Instant.now(), original, null, null, CAT);
 
         original.add("segundo");
 
@@ -73,7 +88,8 @@ public class ErrorInfoTest
         mutable.add("a");
 
         ErrorInfo e = new ErrorInfo(
-            "code", "title", "detail", Instant.now(), mutable, null, null);
+            "code", "title", "detail",
+            Instant.now(), mutable, null, null, CAT);
 
         assertThrows(UnsupportedOperationException.class,
             () -> e.errors().add("b"));
@@ -83,7 +99,8 @@ public class ErrorInfoTest
     void constructor_defaultsAttributesToEmptyWhenNull()
     {
         ErrorInfo e = new ErrorInfo(
-            "code", "title", "detail", Instant.now(), null, null, null);
+            "code", "title", "detail",
+            Instant.now(), null, null, null, CAT);
 
         assertEquals(Map.of(), e.attributes());
     }
@@ -95,8 +112,8 @@ public class ErrorInfoTest
         original.put("k", "v");
 
         ErrorInfo e = new ErrorInfo(
-            "code", "title", "detail", Instant.now(),
-            null, null, original);
+            "code", "title", "detail",
+            Instant.now(), null, null, original, CAT);
 
         original.put("otro", "valor");
 
@@ -110,8 +127,8 @@ public class ErrorInfoTest
         mutable.put("k", "v");
 
         ErrorInfo e = new ErrorInfo(
-            "code", "title", "detail", Instant.now(),
-            null, null, mutable);
+            "code", "title", "detail",
+            Instant.now(), null, null, mutable, CAT);
 
         assertThrows(UnsupportedOperationException.class,
             () -> e.attributes().put("x", "y"));
@@ -122,14 +139,14 @@ public class ErrorInfoTest
     @Test
     void withError_returnsNewInstance()
     {
-        ErrorInfo e = new ErrorInfo("code", "title", "detail");
+        ErrorInfo e = new ErrorInfo("code", "title", "detail", CAT);
         assertNotSame(e, e.withError("error"));
     }
 
     @Test
     void withError_doesNotMutateOriginal()
     {
-        ErrorInfo e = new ErrorInfo("code", "title", "detail");
+        ErrorInfo e = new ErrorInfo("code", "title", "detail", CAT);
         ErrorInfo newer = e.withError("error");
 
         assertEquals(List.of(), e.errors());
@@ -139,7 +156,7 @@ public class ErrorInfoTest
     @Test
     void withError_appendsToExistingErrors()
     {
-        ErrorInfo e = new ErrorInfo("code", "title", "detail")
+        ErrorInfo e = new ErrorInfo("code", "title", "detail", CAT)
             .withError("error1");
 
         ErrorInfo edited = e.withError("error2");
@@ -153,7 +170,7 @@ public class ErrorInfoTest
     @Test
     void withTraceId_returnsNewInstanceWithTraceId()
     {
-        ErrorInfo e = new ErrorInfo("code", "title", "detail");
+        ErrorInfo e = new ErrorInfo("code", "title", "detail", CAT);
         ErrorInfo newer = e.withTraceId("trace-abc");
 
         assertNotSame(e, newer);
@@ -165,7 +182,7 @@ public class ErrorInfoTest
     @Test
     void withAttribute_returnsNewInstanceWithAttribute()
     {
-        ErrorInfo e = new ErrorInfo("code", "title", "detail");
+        ErrorInfo e = new ErrorInfo("code", "title", "detail", CAT);
         ErrorInfo newer = e.withAttribute("userId", 42);
 
         assertNotSame(e, newer);
@@ -179,12 +196,21 @@ public class ErrorInfoTest
     void convenienceConstructor_setsTimestampAndEmptyCollections()
     {
         Instant before = Instant.now();
-        ErrorInfo e = new ErrorInfo("C-001", "title", "detail");
+        ErrorInfo e = new ErrorInfo("C-001", "title", "detail", CAT);
         Instant after = Instant.now();
 
         assertFalse(e.timestamp().isBefore(before));
         assertFalse(e.timestamp().isAfter(after));
         assertEquals(List.of(), e.errors());
         assertEquals(Map.of(), e.attributes());
+    }
+
+    @Test
+    void convenienceConstructor_setsCategory()
+    {
+        ErrorInfo e = new ErrorInfo("C-001", "title", "detail",
+                                    StandardErrorCategories.NOT_FOUND);
+
+        assertEquals(StandardErrorCategories.NOT_FOUND, e.category());
     }
 }

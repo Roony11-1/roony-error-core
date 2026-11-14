@@ -21,19 +21,15 @@ public record ErrorInfo(
 {
     public ErrorInfo
     {
-        Objects.requireNonNull(code, "code");
-        Objects.requireNonNull(title, "title");
+        Objects.requireNonNull(code,     "code");
+        Objects.requireNonNull(title,    "title");
+        Objects.requireNonNull(category, "category");
 
         if (timestamp == null)
             timestamp = Instant.now();
 
         errors     = errors     == null ? List.of() : List.copyOf(errors);
         attributes = attributes == null ? Map.of()  : Map.copyOf(attributes);
-    }
-
-    public ErrorInfo(String code, String title, String detail)
-    {
-        this(code, title, detail, null, null, null, null, null);
     }
 
     public ErrorInfo(String code, String title, String detail, ErrorCategory category)

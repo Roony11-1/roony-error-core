@@ -21,19 +21,21 @@ import io.github.roony11_1.error.core.exceptions.AppException;
 import io.github.roony11_1.error.support.TestAppException;
 
 @ExtendWith(MockitoExtension.class)
-class ErrorHandlerTest
+public class ErrorHandlerTest
 {
     @Mock private IErrorEnricher enricher;
-    @Mock private ErrorResponseMapper mapper;
+    @Mock private ErrorInfoMapper mapper;
     @Mock private ErrorListener listener;
 
     private ErrorHandler handler;
 
     private static final ErrorInfo APP_RESPONSE =
-        new ErrorInfo("TEST-001", "Not found", "No encontrado");
+        new ErrorInfo("TEST-001", "Not found", "No encontrado",
+                      StandardErrorCategories.NOT_FOUND);
 
     private static final ErrorInfo UNEXPECTED_RESPONSE =
-        new ErrorInfo("UNK-001", "Error interno inesperado", null);
+        new ErrorInfo("UNK-001", "Error interno inesperado", null,
+                      StandardErrorCategories.INTERNAL_ERROR);
 
     @BeforeEach
     void setUp()
@@ -42,34 +44,34 @@ class ErrorHandlerTest
         when(enricher.enrich(any(), any())).thenAnswer(inv -> inv.getArgument(0));
     }
 
-    // ---------------- casos base (adaptados) ----------------
+    // ---------------- casos base ----------------
 
     @Test
     void nullThrowable_returnsUnexpectedResponse()
     {
-        when(mapper.toResponse((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
 
         ErrorInfo r = handler.toErrorInfo(null);
 
         assertSame(UNEXPECTED_RESPONSE, r);
-        verify(mapper).toResponse((Throwable) null);
+        verify(mapper).toInfo((Throwable) null);
         verify(enricher).enrich(UNEXPECTED_RESPONSE, null);
     }
 
     @Test
     void nullThrowable_doesNotCallInspector()
     {
-        when(mapper.toResponse((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
 
         handler.toErrorInfo(null);
 
-        verify(mapper).toResponse((Throwable) null);
+        verify(mapper).toInfo((Throwable) null);
     }
 
     @Test
     void nullThrowable_doesNotNotifyListener()
     {
-        when(mapper.toResponse((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
 
         handler.toErrorInfo(null);
 
@@ -81,12 +83,12 @@ class ErrorHandlerTest
     {
         AppException ex = new TestAppException(
             "TEST-001", "Default", StandardErrorCategories.NOT_FOUND, "No encontrado");
-        when(mapper.toResponse((AppException) ex)).thenReturn(APP_RESPONSE);
+        when(mapper.toInfo((AppException) ex)).thenReturn(APP_RESPONSE);
 
         ErrorInfo r = handler.toErrorInfo(ex);
 
         assertSame(APP_RESPONSE, r);
-        verify(mapper).toResponse((AppException) ex);
+        verify(mapper).toInfo((AppException) ex);
         verify(enricher).enrich(APP_RESPONSE, ex);
     }
 
@@ -96,25 +98,25 @@ class ErrorHandlerTest
         AppException domain = new TestAppException(
             "TEST-002", "Default", StandardErrorCategories.INVALID_INPUT, "Inválido");
         Throwable wrapper = new RuntimeException("infra", domain);
-        when(mapper.toResponse((AppException) domain)).thenReturn(APP_RESPONSE);
+        when(mapper.toInfo((AppException) domain)).thenReturn(APP_RESPONSE);
 
         ErrorInfo r = handler.toErrorInfo(wrapper);
 
         assertSame(APP_RESPONSE, r);
-        verify(mapper).toResponse((AppException) domain);
-        verify(mapper, never()).toResponse(wrapper);
+        verify(mapper).toInfo((AppException) domain);
+        verify(mapper, never()).toInfo(wrapper);
     }
 
     @Test
     void genericException_mapsAsUnexpected()
     {
         RuntimeException ex = new RuntimeException("boom");
-        when(mapper.toResponse((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
 
         ErrorInfo r = handler.toErrorInfo(ex);
 
         assertSame(UNEXPECTED_RESPONSE, r);
-        verify(mapper).toResponse((Throwable) ex);
+        verify(mapper).toInfo((Throwable) ex);
         verify(enricher).enrich(UNEXPECTED_RESPONSE, ex);
     }
 
@@ -122,7 +124,7 @@ class ErrorHandlerTest
     void enricherIsCalledOnce_perResponse()
     {
         RuntimeException ex = new RuntimeException("boom");
-        when(mapper.toResponse((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
 
         handler.toErrorInfo(ex);
 
@@ -134,7 +136,7 @@ class ErrorHandlerTest
     {
         RuntimeException ex = new RuntimeException("boom");
         ErrorInfo enriched = UNEXPECTED_RESPONSE.withError("stacktrace");
-        when(mapper.toResponse((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
         when(enricher.enrich(UNEXPECTED_RESPONSE, ex)).thenReturn(enriched);
 
         ErrorInfo r = handler.toErrorInfo(ex);
@@ -143,14 +145,14 @@ class ErrorHandlerTest
         assertFalse(r.errors().isEmpty());
     }
 
-    // ---------------- nuevos: notificación al listener ----------------
+    // ---------------- listener ----------------
 
     @Test
     void appException_notifiesListenerAsHandled()
     {
         AppException ex = new TestAppException(
             "TEST-001", "Default", StandardErrorCategories.NOT_FOUND, "No encontrado");
-        when(mapper.toResponse((AppException) ex)).thenReturn(APP_RESPONSE);
+        when(mapper.toInfo((AppException) ex)).thenReturn(APP_RESPONSE);
 
         handler.toErrorInfo(ex);
 
@@ -161,7 +163,7 @@ class ErrorHandlerTest
     void genericException_notifiesListenerAsUnexpected()
     {
         RuntimeException ex = new RuntimeException("boom");
-        when(mapper.toResponse((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
 
         handler.toErrorInfo(ex);
 
@@ -175,7 +177,7 @@ class ErrorHandlerTest
         AppException domain = new TestAppException(
             "TEST-002", "Default", StandardErrorCategories.INVALID_INPUT, "Inválido");
         Throwable wrapper = new RuntimeException("infra", domain);
-        when(mapper.toResponse((AppException) domain)).thenReturn(APP_RESPONSE);
+        when(mapper.toInfo((AppException) domain)).thenReturn(APP_RESPONSE);
 
         handler.toErrorInfo(wrapper);
 
@@ -188,7 +190,7 @@ class ErrorHandlerTest
     void listenerIsNotifiedOnce_perResponse()
     {
         RuntimeException ex = new RuntimeException("boom");
-        when(mapper.toResponse((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
 
         handler.toErrorInfo(ex);
 
@@ -200,7 +202,7 @@ class ErrorHandlerTest
     {
         RuntimeException ex = new RuntimeException("boom");
         ErrorInfo enriched = UNEXPECTED_RESPONSE.withTraceId("trace-123");
-        when(mapper.toResponse((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
         when(enricher.enrich(UNEXPECTED_RESPONSE, ex)).thenReturn(enriched);
 
         handler.toErrorInfo(ex);
@@ -215,9 +217,8 @@ class ErrorHandlerTest
     void twoArgConstructor_defaultsToNoOpListener()
     {
         var noOpHandler = new ErrorHandler(enricher, mapper);
-        when(mapper.toResponse((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) null)).thenReturn(UNEXPECTED_RESPONSE);
 
-        // no debe lanzar por listener nulo
         assertSame(UNEXPECTED_RESPONSE, noOpHandler.toErrorInfo(null));
     }
 
@@ -226,7 +227,7 @@ class ErrorHandlerTest
     {
         var h = new ErrorHandler(enricher, mapper, null);
         RuntimeException ex = new RuntimeException("boom");
-        when(mapper.toResponse((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
+        when(mapper.toInfo((Throwable) ex)).thenReturn(UNEXPECTED_RESPONSE);
 
         assertSame(UNEXPECTED_RESPONSE, h.toErrorInfo(ex));
     }
