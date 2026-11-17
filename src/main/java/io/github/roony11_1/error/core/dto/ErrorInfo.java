@@ -45,6 +45,15 @@ public record ErrorInfo(
             code, title, detail, timestamp, copy, traceId, attributes, category);
     }
 
+    public ErrorInfo withError(List<String> errors)
+    {
+        var copy = new ArrayList<>(this.errors);
+        copy.addAll(errors);
+
+        return new ErrorInfo(
+                code, title, detail, timestamp, copy, traceId, attributes, category);
+    }
+
     public ErrorInfo withTraceId(String traceId)
     {
         return new ErrorInfo(
